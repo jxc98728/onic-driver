@@ -43,84 +43,15 @@ The rest of this document contains the step-by-step instructions for each of the
     ```
 
 
-### Section 2: Download Xilinx QDMA DPDK driver and Apply OpenNIC Patches
+### Section 2: Build
 
-1.  This repo contains several patch files that must be applied to the [Xilinx QDMA DPDK drivers](https://github.com/Xilinx/dma_ip_drivers.git).
+1.  Use `build.sh` script to compile DPDK:
     ```
-    git clone https://github.com/Xilinx/dma_ip_drivers.git
-    cd dma_ip_drivers
-    git checkout 7859957
-    cd ..
-    ```
-
-1.  Clone this open-nic-dpdk repo:
-    ```
-    git clone https://github.com/Xilinx/open-nic-dpdk
-    ```
-
-1.  Copy the `*.patch` files contained in this repo into the QDMA driver's directory.
-    ```
-    cp open-nic-dpdk/*.patch dma_ip_drivers
+    sudo bash build.sh
     ```
     
-1.  Then apply the OpenNIC patches:
-    ```
-    cd dma_ip_drivers
-    git apply *.patch
-    cd ..
-    ```
 
-### Section 3: Download DPDK and pktgen-dpdk
-
-1.  Download [DPDK source](https://fast.dpdk.org/rel/dpdk-20.11.tar.xz) and build it, including the QDMA drivers.
-
-    ```
-    wget https://fast.dpdk.org/rel/dpdk-20.11.tar.xz
-    tar xvf dpdk-20.11.tar.xz
-    cd dpdk-20.11
-    cp -R ../dma_ip_drivers/QDMA/DPDK/drivers/net/qdma ./drivers/net
-    cp -R ../dma_ip_drivers/QDMA/DPDK/examples/qdma_testapp ./examples
-    ```
-
-1.  Edit `drivers/net/meson.build` to insert `'qdma'` into the list of drivers (~near line 46).  Save the changes.
-
-1.  Return to the earlier directory:
-    ```
-    cd ..
-    ```
-
-1.  Download [pktgen-dpdk source](https://git.dpdk.org/apps/pktgen-dpdk/snapshot/pktgen-dpdk-pktgen-20.11.3.tar.xz) and build it, including the QDMA drivers.
-    ```
-    wget \
-    https://git.dpdk.org/apps/pktgen-dpdk/snapshot/pktgen-dpdk-pktgen-20.11.3.tar.xz
-    tar xvf pktgen-dpdk-pktgen-20.11.3.tar.xz
-    ```
-
-### Section 4: Build
-
-
-
-1.  Build DPDK:
-    ```
-    cd dpdk-20.11
-    meson build
-    cd build
-    ninja
-    sudo ninja install
-    ls -l /usr/local/lib/x86_64-linux-gnu/librte_net_qdma.so
-    sudo ldconfig
-    ls -l ./app/test/dpdk-test
-    cd ../..
-    ```
-
-1.  Build pktgen-dpdk:
-    ```
-    cd pktgen-dpdk-pktgen-20.11.3
-    make RTE_SDK=../dpdk-20.11 RTE_TARGET=build
-    ```
-
-
-### Section 5: Configure proc/cmdline and BIOS if necessary
+### Section 3: Configure proc/cmdline and BIOS if necessary
 
 
 1.  Make sure that IOMMU is enabled within the BIOS settings.
@@ -153,7 +84,7 @@ The rest of this document contains the step-by-step instructions for each of the
     cat /proc/cmdline
     ```
     
-### Section 6: Create the OpenNIC bitfile configured for two CMAC ports
+### Section 4: Create the OpenNIC bitfile configured for two CMAC ports
 
 1.  Clone the latest version of the open-nic-shell from github (including
     some updates after 1.0 release).
@@ -175,7 +106,7 @@ The rest of this document contains the step-by-step instructions for each of the
     sudo setpci -s d8:00.0 COMMAND=0x02
     ```
 
-### Section 7: Writing to Initialize the OpenNIC hardware registers
+### Section 5: Writing to Initialize the OpenNIC hardware registers
 
 1.  Find the pcie bus and device ID for the two PFs:
     ```
@@ -233,7 +164,7 @@ The rest of this document contains the step-by-step instructions for each of the
     sudo pcimem \
     /sys/devices/pci0000:00/0000:00:03.1/0000:08:00.0/resource2 0xC00c w 0x1;
     ```
-### Section 8: Binding DPDK and Testing by Running pktgen
+### Section 6: Binding DPDK and Testing by Running pktgen
 
 1.  Edit dpdk-devbind.py so that it can find the qdma PCIe class/vendor/device, for example like below.  
         (The file dpdk-devbind.diff in this repo also contains these same lines from diff.)
