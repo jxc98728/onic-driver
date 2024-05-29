@@ -11,3 +11,5 @@ ls -l ./app/test/dpdk-test
 cd ../..
 cd pktgen-dpdk
 make RTE_SDK=../dpdk-20.11 RTE_TARGET=build
+cd ../scripts/pcimem
+make
