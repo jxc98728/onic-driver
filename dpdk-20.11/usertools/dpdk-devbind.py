@@ -61,9 +61,10 @@ intel_ntb_icx = {'Class': '06', 'Vendor': '8086', 'Device': '347e',
                  'SVendor': None, 'SDevice': None}
 qdma = {'Class': '02', 'Vendor': '10ee', 'Device': '903f,913f',
                'SVendor': None, 'SDevice': None}
- 
+mqnic = {'Class': '02', 'Vendor': '1234', 'Device': '1001',
+               'SVendor': None, 'SDevice': None}
 
-network_devices = [network_class, cavium_pkx, avp_vnic, ifpga_class, qdma]
+network_devices = [network_class, cavium_pkx, avp_vnic, ifpga_class, qdma, mqnic]
 baseband_devices = [acceleration_class]
 crypto_devices = [encryption_class, intel_processor_class]
 eventdev_devices = [cavium_sso, cavium_tim, octeontx2_sso]
