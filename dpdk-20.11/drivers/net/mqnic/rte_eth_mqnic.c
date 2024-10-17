@@ -677,7 +677,7 @@ mqnic_dev_start(struct rte_eth_dev *dev)
 
 	memset(&link, 0, sizeof(link));
 	link.link_status = ETH_LINK_UP;
-	link.link_speed = ETH_SPEED_NUM_10G;
+	link.link_speed = ETH_SPEED_NUM_100G;
 	link.link_duplex = ETH_LINK_FULL_DUPLEX;
 	return rte_eth_linkstatus_set(dev, &link);
 }
