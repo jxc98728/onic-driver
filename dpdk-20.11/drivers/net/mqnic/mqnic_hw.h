@@ -1,164 +1,331 @@
-/* SPDX-License-Identifier: BSD-3-Clause
- * Copyright(c) 2001-2020 Intel Corporation
+/* SPDX-License-Identifier: BSD-2-Clause
+ * Copyright(c) 2019 The Regents of the University of California
  */
 
-#ifndef _MQNIC_HW_H_
-#define _MQNIC_HW_H_
+#ifndef MQNIC_HW_H
+#define MQNIC_HW_H
 
-#include "mqnic_osdep.h"
-#include "mqnic_regs.h"
-#include "mqnic_defines.h"
+#include <linux/types.h>
 
-struct mqnic_hw;
+#define MQNIC_MAX_IRQ 32
 
-#define MQNIC_DEV_ID 0x1001
+#define MQNIC_MAX_IF 8
+#define MQNIC_MAX_PORTS 8
+#define MQNIC_MAX_SCHED 8
 
-#define __le16 u16
-#define __le32 u32
-#define __le64 u64
+#define MQNIC_MAX_FRAGS 8
 
-/* Function pointers for the MAC. */
-struct mqnic_mac_operations
-{
-	s32 (*init_params)(struct mqnic_hw *);
-	s32 (*id_led_init)(struct mqnic_hw *);
-	s32 (*blink_led)(struct mqnic_hw *);
-	bool (*check_mng_mode)(struct mqnic_hw *);
-	s32 (*check_for_link)(struct mqnic_hw *);
-	s32 (*cleanup_led)(struct mqnic_hw *);
-	void (*clear_hw_cntrs)(struct mqnic_hw *);
-	void (*clear_vfta)(struct mqnic_hw *);
-	s32 (*get_bus_info)(struct mqnic_hw *);
-	void (*set_lan_id)(struct mqnic_hw *);
-	s32 (*get_link_up_info)(struct mqnic_hw *, u16 *, u16 *);
-	s32 (*led_on)(struct mqnic_hw *);
-	s32 (*led_off)(struct mqnic_hw *);
-	void (*update_mc_addr_list)(struct mqnic_hw *, u8 *, u32);
-	s32 (*reset_hw)(struct mqnic_hw *);
-	s32 (*init_hw)(struct mqnic_hw *);
-	void (*shutdown_serdes)(struct mqnic_hw *);
-	void (*power_up_serdes)(struct mqnic_hw *);
-	s32 (*setup_link)(struct mqnic_hw *);
-	s32 (*setup_physical_interface)(struct mqnic_hw *);
-	s32 (*setup_led)(struct mqnic_hw *);
-	void (*write_vfta)(struct mqnic_hw *, u32, u32);
-	void (*config_collision_dist)(struct mqnic_hw *);
-	int (*rar_set)(struct mqnic_hw *, u8 *, u32);
-	s32 (*read_mac_addr)(struct mqnic_hw *);
-	s32 (*validate_mdi_setting)(struct mqnic_hw *);
-	s32 (*acquire_swfw_sync)(struct mqnic_hw *, u16);
-	void (*release_swfw_sync)(struct mqnic_hw *, u16);
-};
+#define MQNIC_MAX_EVENT_RINGS 256
+#define MQNIC_MAX_TX_RINGS 8192
+#define MQNIC_MAX_TX_CPL_RINGS 8192
+#define MQNIC_MAX_RX_RINGS 8192
+#define MQNIC_MAX_RX_CPL_RINGS 8192
 
-struct mqnic_mac_info
-{
-	struct mqnic_mac_operations ops;
-	u8 addr[ETH_ADDR_LEN];
-	u8 perm_addr[ETH_ADDR_LEN];
+#define MQNIC_MAX_I2C_ADAPTERS 4
 
-	// enum mqnic_mac_type type;
+#define MQNIC_BOARD_ID_NETFPGA_SUME 0x10ee7028
+#define MQNIC_BOARD_ID_AU50 0x10ee9032
+#define MQNIC_BOARD_ID_AU200 0x10ee90c8
+#define MQNIC_BOARD_ID_AU250 0x10ee90fa
+#define MQNIC_BOARD_ID_AU280 0x10ee9118
+#define MQNIC_BOARD_ID_VCU108 0x10ee806c
+#define MQNIC_BOARD_ID_VCU118 0x10ee9076
+#define MQNIC_BOARD_ID_VCU1525 0x10ee95f5
+#define MQNIC_BOARD_ID_ZCU106 0x10ee906a
+#define MQNIC_BOARD_ID_XUPP3R 0x12ba9823
+#define MQNIC_BOARD_ID_FB2CG_KU15P 0x1c2ca00e
+#define MQNIC_BOARD_ID_NEXUS_K35_S 0x1ce40003
+#define MQNIC_BOARD_ID_NEXUS_K3P_S 0x1ce40009
+#define MQNIC_BOARD_ID_NEXUS_K3P_Q 0x1ce4000a
+#define MQNIC_BOARD_ID_DNPCIE_40G_KU 0x17df1a00
+#define MQNIC_BOARD_ID_ADM_PCIE_9V3 0x41449003
 
-	u32 collision_delta;
-	u32 ledctl_default;
-	u32 ledctl_mode1;
-	u32 ledctl_mode2;
-	u32 mc_filter_type;
-	u32 tx_packet_delta;
-	u32 txcw;
+// Register blocks
+#define MQNIC_RB_REG_TYPE 0x00
+#define MQNIC_RB_REG_VER 0x04
+#define MQNIC_RB_REG_NEXT_PTR 0x08
 
-	u16 current_ifs_val;
-	u16 ifs_max_val;
-	u16 ifs_min_val;
-	u16 ifs_ratio;
-	u16 ifs_step_size;
-	u16 mta_reg_count;
-	u16 uta_reg_count;
+#define MQNIC_RB_FW_ID_TYPE 0xFFFFFFFF
+#define MQNIC_RB_FW_ID_VER 0x00000100
+#define MQNIC_RB_FW_ID_REG_FPGA_ID 0x0C
+#define MQNIC_RB_FW_ID_REG_FW_ID 0x10
+#define MQNIC_RB_FW_ID_REG_FW_VER 0x14
+#define MQNIC_RB_FW_ID_REG_BOARD_ID 0x18
+#define MQNIC_RB_FW_ID_REG_BOARD_VER 0x1C
+#define MQNIC_RB_FW_ID_REG_BUILD_DATE 0x20
+#define MQNIC_RB_FW_ID_REG_GIT_HASH 0x24
+#define MQNIC_RB_FW_ID_REG_REL_INFO 0x28
 
-	/* Maximum size of the MTA register table in all supported adapters */
-#define MAX_MTA_REG 128
-	u32 mta_shadow[MAX_MTA_REG];
-	u16 rar_entry_count;
+#define MQNIC_RB_GPIO_TYPE 0x0000C100
+#define MQNIC_RB_GPIO_VER 0x00000100
+#define MQNIC_RB_GPIO_REG_GPIO_IN 0x0C
+#define MQNIC_RB_GPIO_REG_GPIO_OUT 0x10
 
-	u8 forced_speed_duplex;
+#define MQNIC_RB_I2C_TYPE 0x0000C110
+#define MQNIC_RB_I2C_VER 0x00000100
+#define MQNIC_RB_I2C_REG_CTRL 0x0C
 
-	bool adaptive_ifs;
-	bool has_fwsm;
-	bool arc_subsystem_valid;
-	bool asf_firmware_present;
-	bool autoneg;
-	bool autoneg_failed;
-	bool get_link_status;
-	bool in_ifs_mode;
-	bool report_tx_early;
-	// enum mqnic_serdes_link_state serdes_link_state;
-	bool serdes_has_link;
-	bool tx_pkt_filtering;
-};
-struct mqnic_hw
-{
-	void *back;
+#define MQNIC_REG_GPIO_I2C_SCL_IN 0x00000001
+#define MQNIC_REG_GPIO_I2C_SCL_OUT 0x00000002
+#define MQNIC_REG_GPIO_I2C_SDA_IN 0x00000100
+#define MQNIC_REG_GPIO_I2C_SDA_OUT 0x00000200
 
-	// u8 *hw_addr;
-	u8 *flash_address;
-	unsigned long io_base;
+#define MQNIC_RB_SPI_FLASH_TYPE 0x0000C120
+#define MQNIC_RB_SPI_FLASH_VER 0x00000200
+#define MQNIC_RB_SPI_FLASH_REG_FORMAT 0x0C
+#define MQNIC_RB_SPI_FLASH_REG_CTRL_0 0x10
+#define MQNIC_RB_SPI_FLASH_REG_CTRL_1 0x14
 
-	struct mqnic_mac_info mac;
+#define MQNIC_RB_BPI_FLASH_TYPE 0x0000C121
+#define MQNIC_RB_BPI_FLASH_VER 0x00000200
+#define MQNIC_RB_BPI_FLASH_REG_FORMAT 0x0C
+#define MQNIC_RB_BPI_FLASH_REG_ADDR 0x10
+#define MQNIC_RB_BPI_FLASH_REG_DATA 0x14
+#define MQNIC_RB_BPI_FLASH_REG_CTRL 0x18
 
-	u16 device_id;
-	u16 subsystem_vendor_id;
-	u16 subsystem_device_id;
-	u16 vendor_id;
+#define MQNIC_RB_ALVEO_BMC_TYPE 0x0000C140
+#define MQNIC_RB_ALVEO_BMC_VER 0x00000100
+#define MQNIC_RB_ALVEO_BMC_REG_ADDR 0x0C
+#define MQNIC_RB_ALVEO_BMC_REG_DATA 0x10
 
-	u8 revision_id;
+#define MQNIC_RB_GECKO_BMC_TYPE 0x0000C141
+#define MQNIC_RB_GECKO_BMC_VER 0x00000100
+#define MQNIC_RB_GECKO_BMC_REG_STATUS 0x0C
+#define MQNIC_RB_GECKO_BMC_REG_DATA 0x10
+#define MQNIC_RB_GECKO_BMC_REG_CMD 0x14
 
-	// corundum add
-	uint64_t hw_regs_size;
-	phys_addr_t hw_regs_phys;
-	u8 *hw_addr;
-	u8 *phc_hw_addr;
+#define MQNIC_RB_STATS_TYPE 0x0000C004
+#define MQNIC_RB_STATS_VER 0x00000100
+#define MQNIC_RB_STATS_REG_OFFSET 0x0C
+#define MQNIC_RB_STATS_REG_COUNT 0x10
+#define MQNIC_RB_STATS_REG_STRIDE 0x14
+#define MQNIC_RB_STATS_REG_FLAGS 0x18
 
-	u8 base_mac[ETH_ALEN];
+#define MQNIC_RB_PHC_TYPE 0x0000C080
+#define MQNIC_RB_PHC_VER 0x00000100
+#define MQNIC_RB_PHC_REG_CTRL 0x0C
+#define MQNIC_RB_PHC_REG_CUR_FNS 0x10
+#define MQNIC_RB_PHC_REG_CUR_NS 0x14
+#define MQNIC_RB_PHC_REG_CUR_SEC_L 0x18
+#define MQNIC_RB_PHC_REG_CUR_SEC_H 0x1C
+#define MQNIC_RB_PHC_REG_GET_FNS 0x20
+#define MQNIC_RB_PHC_REG_GET_NS 0x24
+#define MQNIC_RB_PHC_REG_GET_SEC_L 0x28
+#define MQNIC_RB_PHC_REG_GET_SEC_H 0x2C
+#define MQNIC_RB_PHC_REG_SET_FNS 0x30
+#define MQNIC_RB_PHC_REG_SET_NS 0x34
+#define MQNIC_RB_PHC_REG_SET_SEC_L 0x38
+#define MQNIC_RB_PHC_REG_SET_SEC_H 0x3C
+#define MQNIC_RB_PHC_REG_PERIOD_FNS 0x40
+#define MQNIC_RB_PHC_REG_PERIOD_NS 0x44
+#define MQNIC_RB_PHC_REG_NOM_PERIOD_FNS 0x48
+#define MQNIC_RB_PHC_REG_NOM_PERIOD_NS 0x4C
+#define MQNIC_RB_PHC_REG_ADJ_FNS 0x50
+#define MQNIC_RB_PHC_REG_ADJ_NS 0x54
+#define MQNIC_RB_PHC_REG_ADJ_COUNT 0x58
+#define MQNIC_RB_PHC_REG_ADJ_ACTIVE 0x5C
 
-	u32 fw_id;
-	u32 fw_ver;
-	u32 board_id;
-	u32 board_ver;
+#define MQNIC_RB_PHC_PEROUT_TYPE 0x0000C081
+#define MQNIC_RB_PHC_PEROUT_VER 0x00000100
+#define MQNIC_RB_PHC_PEROUT_REG_CTRL 0x0C
+#define MQNIC_RB_PHC_PEROUT_REG_START_FNS 0x10
+#define MQNIC_RB_PHC_PEROUT_REG_START_NS 0x14
+#define MQNIC_RB_PHC_PEROUT_REG_START_SEC_L 0x18
+#define MQNIC_RB_PHC_PEROUT_REG_START_SEC_H 0x1C
+#define MQNIC_RB_PHC_PEROUT_REG_PERIOD_FNS 0x20
+#define MQNIC_RB_PHC_PEROUT_REG_PERIOD_NS 0x24
+#define MQNIC_RB_PHC_PEROUT_REG_PERIOD_SEC_L 0x28
+#define MQNIC_RB_PHC_PEROUT_REG_PERIOD_SEC_H 0x2C
+#define MQNIC_RB_PHC_PEROUT_REG_WIDTH_FNS 0x30
+#define MQNIC_RB_PHC_PEROUT_REG_WIDTH_NS 0x34
+#define MQNIC_RB_PHC_PEROUT_REG_WIDTH_SEC_L 0x38
+#define MQNIC_RB_PHC_PEROUT_REG_WIDTH_SEC_H 0x3C
 
-	u32 if_count;
-	u32 if_stride;
-	u32 if_csr_offset;
-};
+#define MQNIC_RB_IF_TYPE 0x0000C000
+#define MQNIC_RB_IF_VER 0x00000100
+#define MQNIC_RB_IF_REG_OFFSET 0x0C
+#define MQNIC_RB_IF_REG_COUNT 0x10
+#define MQNIC_RB_IF_REG_STRIDE 0x14
+#define MQNIC_RB_IF_REG_CSR_OFFSET 0x18
+
+#define MQNIC_RB_IF_CTRL_TYPE 0x0000C001
+#define MQNIC_RB_IF_CTRL_VER 0x00000400
+#define MQNIC_RB_IF_CTRL_REG_FEATURES 0x0C
+#define MQNIC_RB_IF_CTRL_REG_PORT_COUNT 0x10
+#define MQNIC_RB_IF_CTRL_REG_SCHED_COUNT 0x14
+#define MQNIC_RB_IF_CTRL_REG_MAX_TX_MTU 0x20
+#define MQNIC_RB_IF_CTRL_REG_MAX_RX_MTU 0x24
+#define MQNIC_RB_IF_CTRL_REG_TX_MTU 0x28
+#define MQNIC_RB_IF_CTRL_REG_RX_MTU 0x2C
+
+#define MQNIC_IF_FEATURE_RSS (1 << 0)
+#define MQNIC_IF_FEATURE_PTP_TS (1 << 4)
+#define MQNIC_IF_FEATURE_TX_CSUM (1 << 8)
+#define MQNIC_IF_FEATURE_RX_CSUM (1 << 9)
+#define MQNIC_IF_FEATURE_RX_HASH (1 << 10)
+
+#define MQNIC_RB_RX_QUEUE_MAP_TYPE 0x0000C090
+#define MQNIC_RB_RX_QUEUE_MAP_VER 0x00000100
+#define MQNIC_RB_RX_QUEUE_MAP_REG_PORTS 0x0C
+#define MQNIC_RB_RX_QUEUE_MAP_CH_OFFSET 0x10
+#define MQNIC_RB_RX_QUEUE_MAP_CH_STRIDE 0x10
+#define MQNIC_RB_RX_QUEUE_MAP_CH_REG_OFFSET 0x00
+#define MQNIC_RB_RX_QUEUE_MAP_CH_REG_RSS_MASK 0x04
+#define MQNIC_RB_RX_QUEUE_MAP_CH_REG_APP_MASK 0x08
+
+#define MQNIC_RB_EVENT_QM_TYPE 0x0000C010
+#define MQNIC_RB_EVENT_QM_VER 0x00000100
+#define MQNIC_RB_EVENT_QM_REG_OFFSET 0x0C
+#define MQNIC_RB_EVENT_QM_REG_COUNT 0x10
+#define MQNIC_RB_EVENT_QM_REG_STRIDE 0x14
+
+#define MQNIC_RB_TX_QM_TYPE 0x0000C020
+#define MQNIC_RB_TX_QM_VER 0x00000100
+#define MQNIC_RB_TX_QM_REG_OFFSET 0x0C
+#define MQNIC_RB_TX_QM_REG_COUNT 0x10
+#define MQNIC_RB_TX_QM_REG_STRIDE 0x14
+
+#define MQNIC_RB_TX_CQM_TYPE 0x0000C030
+#define MQNIC_RB_TX_CQM_VER 0x00000100
+#define MQNIC_RB_TX_CQM_REG_OFFSET 0x0C
+#define MQNIC_RB_TX_CQM_REG_COUNT 0x10
+#define MQNIC_RB_TX_CQM_REG_STRIDE 0x14
+
+#define MQNIC_RB_RX_QM_TYPE 0x0000C021
+#define MQNIC_RB_RX_QM_VER 0x00000100
+#define MQNIC_RB_RX_QM_REG_OFFSET 0x0C
+#define MQNIC_RB_RX_QM_REG_COUNT 0x10
+#define MQNIC_RB_RX_QM_REG_STRIDE 0x14
+
+#define MQNIC_RB_RX_CQM_TYPE 0x0000C031
+#define MQNIC_RB_RX_CQM_VER 0x00000100
+#define MQNIC_RB_RX_CQM_REG_OFFSET 0x0C
+#define MQNIC_RB_RX_CQM_REG_COUNT 0x10
+#define MQNIC_RB_RX_CQM_REG_STRIDE 0x14
+
+#define MQNIC_RB_PORT_TYPE 0x0000C002
+#define MQNIC_RB_PORT_VER 0x00000200
+#define MQNIC_RB_PORT_REG_OFFSET 0x0C
+
+#define MQNIC_RB_PORT_CTRL_TYPE 0x0000C003
+#define MQNIC_RB_PORT_CTRL_VER 0x00000200
+#define MQNIC_RB_PORT_CTRL_REG_FEATURES 0x0C
+#define MQNIC_RB_PORT_CTRL_REG_TX_STATUS 0x10
+#define MQNIC_RB_PORT_CTRL_REG_RX_STATUS 0x14
+
+#define MQNIC_RB_SCHED_BLOCK_TYPE 0x0000C004
+#define MQNIC_RB_SCHED_BLOCK_VER 0x00000300
+#define MQNIC_RB_SCHED_BLOCK_REG_OFFSET 0x0C
+
+#define MQNIC_RB_SCHED_RR_TYPE 0x0000C040
+#define MQNIC_RB_SCHED_RR_VER 0x00000100
+#define MQNIC_RB_SCHED_RR_REG_OFFSET 0x0C
+#define MQNIC_RB_SCHED_RR_REG_CH_COUNT 0x10
+#define MQNIC_RB_SCHED_RR_REG_CH_STRIDE 0x14
+#define MQNIC_RB_SCHED_RR_REG_CTRL 0x18
+#define MQNIC_RB_SCHED_RR_REG_DEST 0x1C
+
+#define MQNIC_RB_SCHED_CTRL_TDMA_TYPE 0x0000C050
+#define MQNIC_RB_SCHED_CTRL_TDMA_VER 0x00000100
+#define MQNIC_RB_SCHED_CTRL_TDMA_REG_OFFSET 0x0C
+#define MQNIC_RB_SCHED_CTRL_TDMA_REG_CH_COUNT 0x10
+#define MQNIC_RB_SCHED_CTRL_TDMA_REG_CH_STRIDE 0x14
+#define MQNIC_RB_SCHED_CTRL_TDMA_REG_CTRL 0x18
+#define MQNIC_RB_SCHED_CTRL_TDMA_REG_TS_COUNT 0x1C
+
+#define MQNIC_RB_TDMA_SCH_TYPE 0x0000C060
+#define MQNIC_RB_TDMA_SCH_VER 0x00000100
+#define MQNIC_RB_TDMA_SCH_REG_TS_COUNT 0x0C
+#define MQNIC_RB_TDMA_SCH_REG_CTRL 0x10
+#define MQNIC_RB_TDMA_SCH_REG_STATUS 0x14
+#define MQNIC_RB_TDMA_SCH_REG_SCH_START_FNS 0x20
+#define MQNIC_RB_TDMA_SCH_REG_SCH_START_NS 0x24
+#define MQNIC_RB_TDMA_SCH_REG_SCH_START_SEC_L 0x28
+#define MQNIC_RB_TDMA_SCH_REG_SCH_START_SEC_H 0x2C
+#define MQNIC_RB_TDMA_SCH_REG_SCH_PERIOD_FNS 0x30
+#define MQNIC_RB_TDMA_SCH_REG_SCH_PERIOD_NS 0x34
+#define MQNIC_RB_TDMA_SCH_REG_SCH_PERIOD_SEC_L 0x38
+#define MQNIC_RB_TDMA_SCH_REG_SCH_PERIOD_SEC_H 0x3C
+#define MQNIC_RB_TDMA_SCH_REG_TS_PERIOD_FNS 0x40
+#define MQNIC_RB_TDMA_SCH_REG_TS_PERIOD_NS 0x44
+#define MQNIC_RB_TDMA_SCH_REG_TS_PERIOD_SEC_L 0x48
+#define MQNIC_RB_TDMA_SCH_REG_TS_PERIOD_SEC_H 0x4C
+#define MQNIC_RB_TDMA_SCH_REG_ACTIVE_PERIOD_FNS 0x50
+#define MQNIC_RB_TDMA_SCH_REG_ACTIVE_PERIOD_NS 0x54
+#define MQNIC_RB_TDMA_SCH_REG_ACTIVE_PERIOD_SEC_L 0x58
+#define MQNIC_RB_TDMA_SCH_REG_ACTIVE_PERIOD_SEC_H 0x5C
+
+#define MQNIC_RB_APP_INFO_TYPE 0x0000C005
+#define MQNIC_RB_APP_INFO_VER 0x00000200
+#define MQNIC_RB_APP_INFO_REG_ID 0x0C
+
+#define MQNIC_QUEUE_BASE_ADDR_REG 0x00
+#define MQNIC_QUEUE_ACTIVE_LOG_SIZE_REG 0x08
+#define MQNIC_QUEUE_CPL_QUEUE_INDEX_REG 0x0C
+#define MQNIC_QUEUE_HEAD_PTR_REG 0x10
+#define MQNIC_QUEUE_TAIL_PTR_REG 0x18
+
+#define MQNIC_QUEUE_ACTIVE_MASK 0x80000000
+
+#define MQNIC_CPL_QUEUE_BASE_ADDR_REG 0x00
+#define MQNIC_CPL_QUEUE_ACTIVE_LOG_SIZE_REG 0x08
+#define MQNIC_CPL_QUEUE_INTERRUPT_INDEX_REG 0x0C
+#define MQNIC_CPL_QUEUE_HEAD_PTR_REG 0x10
+#define MQNIC_CPL_QUEUE_TAIL_PTR_REG 0x18
+
+#define MQNIC_CPL_QUEUE_ACTIVE_MASK 0x80000000
+
+#define MQNIC_CPL_QUEUE_ARM_MASK 0x80000000
+#define MQNIC_CPL_QUEUE_CONT_MASK 0x40000000
+
+#define MQNIC_EVENT_QUEUE_BASE_ADDR_REG 0x00
+#define MQNIC_EVENT_QUEUE_ACTIVE_LOG_SIZE_REG 0x08
+#define MQNIC_EVENT_QUEUE_INTERRUPT_INDEX_REG 0x0C
+#define MQNIC_EVENT_QUEUE_HEAD_PTR_REG 0x10
+#define MQNIC_EVENT_QUEUE_TAIL_PTR_REG 0x18
+
+#define MQNIC_EVENT_QUEUE_ACTIVE_MASK 0x80000000
+
+#define MQNIC_EVENT_QUEUE_ARM_MASK 0x80000000
+#define MQNIC_EVENT_QUEUE_CONT_MASK 0x40000000
+
+#define MQNIC_EVENT_TYPE_TX_CPL 0x0000
+#define MQNIC_EVENT_TYPE_RX_CPL 0x0001
+
+#define MQNIC_DESC_SIZE 16
+#define MQNIC_CPL_SIZE 32
+#define MQNIC_EVENT_SIZE 32
 
 struct mqnic_desc
 {
-	u16 rsvd0;
-	u16 tx_csum_cmd;
-	u32 len;
-	u64 addr;
+	__le16 rsvd0;
+	__le16 tx_csum_cmd;
+	__le32 len;
+	__le64 addr;
 };
 
 struct mqnic_cpl
 {
-	u16 queue;
-	u16 index;
-	u16 len;
-	u16 rsvd0;
-	u32 ts_ns;
-	u16 ts_s;
-	u16 rx_csum;
-	u32 rx_hash;
-	u8 rx_hash_type;
-	u8 rsvd1;
-	u8 rsvd2;
-	u8 rsvd3;
-	u32 rsvd4;
-	u32 rsvd5;
+	__le16 queue;
+	__le16 index;
+	__le16 len;
+	__le16 rsvd0;
+	__le32 ts_ns;
+	__le16 ts_s;
+	__le16 rx_csum;
+	__le32 rx_hash;
+	__u8 rx_hash_type;
+	__u8 port;
+	__u8 rsvd2;
+	__u8 rsvd3;
+	__le32 rsvd4;
+	__le32 rsvd5;
 };
 
 struct mqnic_event
 {
-	u16 type;
-	u16 source;
+	__le16 type;
+	__le16 source;
 };
 
-#endif
+#endif /* MQNIC_HW_H */

@@ -1,8 +1,14 @@
-# SPDX-License-Identifier: BSD-3-Clause
-# Copyright(c) 2022 Bruce
-
-sources = files(
-	'mqnic_logs.c',
-	'mqnic_ethdev.c',
-	'mqnic_rxtx.c'
+if not is_linux
+	build = false
+	reason = 'only supported on Linux'
+endif
+sources = files('rte_eth_mqnic.c',
+		'mqnic_cq.c',
+		'mqnic_rx.c',
+		'mqnic_tx.c',
+		'mqnic_port.c',
+		'mqnic_if.c',
+		'mqnic_reg_block.c',
+		'mqnic_scheduler.c',
+		'mqnic_sched_block.c'
 )
